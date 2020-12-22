@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,18 +13,27 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+//Route::middleware('auth:api')->get('/user', function (Request $request) {
+//    return $request->user();
+//});
 
 Route::group([
     'middleware'=>'api',
-    //'namespace' =>'App\Http\Controllers',
-    //'prefix'=>'auth',
+    'prefix'=>'auth',
     //'as'=>'api.',
-], function() {
+], function($router) {
     Route::post('register', 'UserController@register');
     Route::post('login', 'UserController@login');
     Route::post('logout', 'UserController@logout');
     Route::post('profile', 'UserController@profile');
+    Route::post('refresh', 'UserController@refresh');
+});
+Route::group([
+    'middleware'=>'api',
+   'prefix'=>'games'
+
+], function($router) {
+    Route::post('/all', 'CompetitionController@index');
+    Route::post('/join', 'CompetitionController@join');
+
 });

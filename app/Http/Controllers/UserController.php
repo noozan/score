@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Group;
+use App\Helpers\APIHelpers;
+use App\Transaction;
 use App\User;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\JWTAuth;
+use function MongoDB\BSON\toJSON;
 
 class UserController extends Controller
 {
@@ -15,26 +20,32 @@ class UserController extends Controller
     }
 
     public function login(Request $request){
+        $token = auth()->attempt($request->all());
+        //dd($token);
+
         $validator=Validator::make($request->all(),[
             'email'=>'required|email',
             'password'=>'required'
         ]);
         if($validator->fails())
-            return response()->json($validator->errors(),400);
+            return response()->json(APIHelpers::APIResponse(false,400,'ok',$validator->errors()));
 
         $token_validity=24*60;
 
         auth('api')->factory()->setTTL($token_validity);
 
         if(!$token=$this->guard()->attempt($validator->validated())){
-            return response()->json(['error'=>'unauth'],401);
+            return response()->json(APIHelpers::APIResponse(true,401,'unauth',null));
 
         }
-        return $this->respondWithToken($token);
+        return response()->json(APIHelpers::APIResponse(false,0,'ok',$this->respondWithToken($token)));
 
     }
 
     public function logout(){
+
+        $this->guard()->logout();
+        return response()->json(APIHelpers::APIResponse(false,200,"logout successfully",null));
 
     }
     public function register(Request  $request){
@@ -44,32 +55,45 @@ class UserController extends Controller
             'password'=>'required|confirmed|min:6'
         ]);
         if($validator->fails())
-            return response()->json($validator->errors(),422);
+            return response()->json(APIHelpers::APIResponse(false,0,'',$validator->errors()));
 
         $user=User::create(array_merge(
             $validator->validated(),
             ['password'=>bcrypt($request->password)]
         ));
+        return response()->json(APIHelpers::APIResponse(false,200,'',$user));
 
 
     }
-    public function profile(){
+    public function profile()
+    {
+        $data=[];
+        $user = $this->guard()->user()->competitions()->get();//User::find($this->guard()->user()->id);
+        $data['user']=$this->guard()->user();
+        $data['balance']=$this->guard()->user()->transactionsSum();
+        $data['competitions']=$this->guard()->user()->competitions()->get();
+
+        return \response()->json(APIHelpers::APIResponse(false, 1, '', $data));
 
     }
-
     public function refresh(){
+        return $this->respondWithToken($this->guard()->refresh());
+        //return \response()->json(APIHelpers::APIResponse(true,200,'',$code));
 
     }
     protected function guard(){
-        return Auth::guard();
+        return Auth::guard('api');
     }
 
     protected function respondWithToken($token){
-        return response()->json([
-           'token'=>$token,
-            'token_type'=>'bearer',
-            'token_validity'=>auth('api')->factory()->getTTL() * 60
-        ]);
+        return
+            [
+                'token'          => $token,
+                'token_type'     => 'bearer',
+                'token_validity' => (auth('api')->factory()->getTTL() * 60),
+            ];
+
+
     }
 
 

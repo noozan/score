@@ -40,8 +40,18 @@ class User extends \TCG\Voyager\Models\User implements JWTSubject
 
     public function transactions()
         {
-            return $this->hasMany('App\Transaction');
+            return $this->hasMany(Transaction::class);
         }
+    public function transactionsSum()
+    {
+        return $this->hasMany(Transaction::class)->sum('amount');
+    }
+
+    public function competitions()
+    {
+        return $this->belongsToMany(Competition::class)->where('active', 1)->withPivot('user_id');
+    }
+
 
 
     public function getJWTIdentifier()

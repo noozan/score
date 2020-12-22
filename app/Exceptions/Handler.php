@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Exceptions;
+use App\Helpers\APIHelpers;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
@@ -50,6 +52,15 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+
+            if($exception instanceof UnauthorizedHttpException) {
+
+                return response()->json(APIHelpers::APIResponse(true,400,'Unauthorized'));
+
+            }
+
+
         return parent::render($request, $exception);
     }
+
 }
