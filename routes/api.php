@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware'=>'api',
-    'prefix'=>'auth',
+    'prefix'=>'user',
     //'as'=>'api.',
 ], function($router) {
     Route::post('register', 'UserController@register');
@@ -27,6 +27,7 @@ Route::group([
     Route::post('logout', 'UserController@logout');
     Route::post('profile', 'UserController@profile');
     Route::post('refresh', 'UserController@refresh');
+    Route::post('recharge', 'UserController@reload');
 });
 Route::group([
     'middleware'=>'api',

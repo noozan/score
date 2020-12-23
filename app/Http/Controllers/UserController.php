@@ -68,9 +68,9 @@ class UserController extends Controller
     public function profile()
     {
         $data=[];
-        $user = $this->guard()->user()->competitions()->get();//User::find($this->guard()->user()->id);
+        //$user = $this->guard()->user()->competitions()->get(['id','name']);//User::find($this->guard()->user()->id);
         $data['user']=$this->guard()->user();
-        $data['balance']=$this->guard()->user()->transactionsSum();
+
         $data['competitions']=$this->guard()->user()->competitions()->get();
 
         return \response()->json(APIHelpers::APIResponse(false, 1, '', $data));
@@ -80,6 +80,22 @@ class UserController extends Controller
         return $this->respondWithToken($this->guard()->refresh());
         //return \response()->json(APIHelpers::APIResponse(true,200,'',$code));
 
+    }
+
+    public function reload(Request $request){
+
+        $validator=Validator::make($request->all(),
+        [
+            'amount'=>"required|regex:/^\d+(\.\d{1,2})?$/"
+        ]);
+        if($validator->fails())
+            return response()->json(APIHelpers::APIResponse(true,400,$validator->errors()) );
+
+        $transaction= new Transaction();
+        $transaction->amount=$request->amount;
+        $transaction->description='Recharge';
+        $this->guard()->user()->transactions()->save($transaction);
+        return \response()->json(APIHelpers::APIResponse(false, 1, 'Successfully reloaded '. $request->amount ));
     }
     protected function guard(){
         return Auth::guard('api');

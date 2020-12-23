@@ -38,6 +38,12 @@ class User extends \TCG\Voyager\Models\User implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['balance'];
+    public function getBalanceAttribute()
+    {
+        //if($this->has)
+        return $this->transactionsSum();
+    }
     public function transactions()
         {
             return $this->hasMany(Transaction::class);
