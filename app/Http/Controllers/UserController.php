@@ -28,24 +28,24 @@ class UserController extends Controller
             'password'=>'required'
         ]);
         if($validator->fails())
-            return response()->json(APIHelpers::APIResponse(false,400,'ok',$validator->errors()));
+            return response()->json(APIHelpers::APIResponse(false,1,'ok',$validator->errors()));
 
         $token_validity=24*60;
 
         auth('api')->factory()->setTTL($token_validity);
 
         if(!$token=$this->guard()->attempt($validator->validated())){
-            return response()->json(APIHelpers::APIResponse(true,401,'unauth',null));
+            return response()->json(APIHelpers::APIResponse(true,0,'unauth',null));
 
         }
-        return response()->json(APIHelpers::APIResponse(false,0,'ok',$this->respondWithToken($token)));
+        return response()->json(APIHelpers::APIResponse(false,1,'ok',$this->respondWithToken($token)));
 
     }
 
     public function logout(){
 
         $this->guard()->logout();
-        return response()->json(APIHelpers::APIResponse(false,200,"logout successfully",null));
+        return response()->json(APIHelpers::APIResponse(false,1,"logout successfully",null));
 
     }
     public function register(Request  $request){
@@ -55,13 +55,13 @@ class UserController extends Controller
             'password'=>'required|confirmed|min:6'
         ]);
         if($validator->fails())
-            return response()->json(APIHelpers::APIResponse(false,0,'',$validator->errors()));
+            return response()->json(APIHelpers::APIResponse(true,0,'',$validator->errors()));
 
         $user=User::create(array_merge(
             $validator->validated(),
             ['password'=>bcrypt($request->password)]
         ));
-        return response()->json(APIHelpers::APIResponse(false,200,'',$user));
+        return response()->json(APIHelpers::APIResponse(false,1,'',$user));
 
 
     }
@@ -89,7 +89,7 @@ class UserController extends Controller
             'amount'=>"required|regex:/^\d+(\.\d{1,2})?$/"
         ]);
         if($validator->fails())
-            return response()->json(APIHelpers::APIResponse(true,400,$validator->errors()) );
+            return response()->json(APIHelpers::APIResponse(true,0,$validator->errors()) );
 
         $transaction= new Transaction();
         $transaction->amount=$request->amount;
