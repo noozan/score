@@ -23,7 +23,7 @@ class CompetitionController extends Controller
     public function index(){
 
         $games=Competition::where('active',1)->get(['id','name','description']);
-        return response()->json(APIHelpers::APIResponse(false,200,'',$games));
+        return response()->json(APIHelpers::APIResponse(false,1,'',$games));
     }
     public function join(Request $request){
         if($this->user->competitions()->find($request->competition_id)){
@@ -33,7 +33,7 @@ class CompetitionController extends Controller
         ['competition_id'=>'exists:competitions,id']);
 
         if($validator->fails())
-            return response()->json(APIHelpers::APIResponse(true,400,$validator->errors()) );
+            return response()->json(APIHelpers::APIResponse(true,0,$validator->errors()) );
 
         $competition_price= Competition::find($request->competition_id)->price;
         if($this->user->transactionsSum() >=$competition_price)
@@ -50,7 +50,10 @@ class CompetitionController extends Controller
 //            $transaction->amount=$competition_price*1;
 //            $transaction->user_id=1;
 //            $transaction->save();
-//            return response()->json(APIHelpers::APIResponse(false,1,'user joined') );
+            $data=[];
+            $data['user']=$this->user;
+            $data['competitions']=$this->user->competitions()->get();
+            return response()->json(APIHelpers::APIResponse(false,1,'user joined',$data) );
         }
         else{
             return response()->json(APIHelpers::APIResponse(true,0,'Insufficient balance. Please reload') );
